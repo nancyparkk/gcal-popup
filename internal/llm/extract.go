@@ -48,7 +48,7 @@ func NewGeminiExtractor(ctx context.Context) (*GeminiExtractor, error) {
 		return nil, fmt.Errorf("unable to create gemini client: %w", err)
 	}
 
-	return &GeminiExtractor{client: client, model: "gemini-2.5-flash"}, nil
+	return &GeminiExtractor{client: client, model: "gemini-3.6-flash"}, nil
 }
 
 func (g *GeminiExtractor) Extract(ctx context.Context, conversation []string) (*ExtractedEvent, error) {
