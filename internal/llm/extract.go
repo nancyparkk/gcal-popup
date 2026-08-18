@@ -11,18 +11,48 @@ import (
 	"google.golang.org/genai"
 )
 
-// ExtractedEvent is the structured result of parsing freeform text.
+// structured result of parsing freeform text
 type ExtractedEvent struct {
 	Title              string `json:"title"`
-	Date               string `json:"date"`       // YYYY-MM-DD
-	StartTime          string `json:"start_time"` // HH:MM (24hr)
+	Date               string `json:"date"`              // YYYY-MM-DD
+	StartTime          string `json:"start_time"`         // HH:MM (24hr)
 	DurationMinutes    int    `json:"duration_minutes"`
-	Confidence         string `json:"confidence"` // high | medium | low
+	Confidence         string `json:"confidence"`         // high | medium | low
 	NeedsClarification bool   `json:"needs_clarification"`
 	ClarifyingQuestion string `json:"clarifying_question"`
 }
 
-// Extractor turns a conversation (original text + any Q&A so far) into a structured event.
+// validates extracted fields and model output
+func (e *ExtractedEvent) Validate() error {
+	if strings.TrimSpace(e.Title) == "" {
+		return fmt.Errorf("title is empty")
+	}
+
+	date, err := time.Parse("2006-01-02", e.Date)
+	if err != nil {
+		return fmt.Errorf("date %q is not a valid date: %w", e.Date, err)
+	}
+
+	now := time.Now()
+	if date.Before(now.AddDate(0, 0, -1)) {
+		return fmt.Errorf("date %q is in the past", e.Date)
+	}
+	if date.After(now.AddDate(1, 0, 0)) {
+		return fmt.Errorf("date %q is far in the future", e.Date)
+	}
+
+	if _, err := time.Parse("15:04", e.StartTime); err != nil {
+		return fmt.Errorf("start_time %q is not valid: %w", e.StartTime, err)
+	}
+
+	if e.DurationMinutes < 5 || e.DurationMinutes > 720 {
+		return fmt.Errorf("duration_minutes %d is out of a valid range (5-720)", e.DurationMinutes)
+	}
+
+	return nil
+}
+
+// turns a conversation into a structured event
 type Extractor interface {
 	Extract(ctx context.Context, conversation []string) (*ExtractedEvent, error)
 }
@@ -48,7 +78,7 @@ func NewGeminiExtractor(ctx context.Context) (*GeminiExtractor, error) {
 		return nil, fmt.Errorf("unable to create gemini client: %w", err)
 	}
 
-	return &GeminiExtractor{client: client, model: "gemini-3.6-flash"}, nil
+	return &GeminiExtractor{client: client, model: "gemini-2.5-flash"}, nil
 }
 
 func (g *GeminiExtractor) Extract(ctx context.Context, conversation []string) (*ExtractedEvent, error) {
@@ -73,6 +103,9 @@ Respond with ONLY valid JSON, no markdown formatting, matching this exact shape:
 }`, now.Format("2006-01-02 (Monday)"))
 
 	fullPrompt := systemPrompt + "\n\nConversation so far:\n" + strings.Join(conversation, "\n")
+
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	result, err := g.client.Models.GenerateContent(ctx, g.model, genai.Text(fullPrompt), nil)
 	if err != nil {
