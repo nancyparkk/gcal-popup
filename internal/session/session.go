@@ -7,24 +7,19 @@ import (
 	"github.com/nancyparkk/gcal-popup/internal/llm"
 )
 
-// maxClarificationRounds caps how many times the session will ask a
-// clarifying question before falling back to its best guess.
+//caps number of questions before fallback to best guess
 const maxClarificationRounds = 3
 
-// AskUserFunc is called when the session needs to ask a clarifying question.
-// It's given the question and should return the user's answer. This keeps
-// Session decoupled from any specific UI (terminal, webview, etc).
+//called when sess needs clarifying question
 type AskUserFunc func(question string) (string, error)
 
-// Session manages one capture: an initial piece of text, run through the
-// LLM extractor, looping through clarifying questions (bounded) until
-// confident or out of rounds.
+//manages one capture
 type Session struct {
 	extractor    llm.Extractor
 	conversation []string
 }
 
-// New starts a new session with the user's initial freeform text.
+//new session with the user's initial freeform text
 func New(extractor llm.Extractor, initialText string) *Session {
 	return &Session{
 		extractor:    extractor,
@@ -32,8 +27,7 @@ func New(extractor llm.Extractor, initialText string) *Session {
 	}
 }
 
-// Run executes the extract -> clarify loop, capped at maxClarificationRounds,
-// and returns the final best-effort extracted event.
+// executes and returns best event
 func (s *Session) Run(ctx context.Context, askUser AskUserFunc) (*llm.ExtractedEvent, error) {
 	var lastEvent *llm.ExtractedEvent
 
@@ -56,8 +50,6 @@ func (s *Session) Run(ctx context.Context, askUser AskUserFunc) (*llm.ExtractedE
 		s.conversation = append(s.conversation, "Q: "+event.ClarifyingQuestion, "A: "+answer)
 	}
 
-	// Out of rounds - return the best guess we have, even though it may
-	// still be flagged as needing clarification. The caller (UI/confirmation
-	// step) is responsible for letting the user manually correct it.
+	//return best guess
 	return lastEvent, nil
 }
