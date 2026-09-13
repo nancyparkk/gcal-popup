@@ -28,16 +28,17 @@ func (e *ExtractedEvent) Validate() error {
 		return fmt.Errorf("title is empty")
 	}
 
-	date, err := time.Parse("2006-01-02", e.Date)
+	date, err := time.ParseInLocation("2006-01-02", e.Date, time.Local)
 	if err != nil {
 		return fmt.Errorf("date %q is not a valid date: %w", e.Date, err)
 	}
 
 	now := time.Now()
-	if date.Before(now.AddDate(0, 0, -1)) {
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	if date.Before(today.AddDate(0, 0, -1)) {
 		return fmt.Errorf("date %q is in the past", e.Date)
 	}
-	if date.After(now.AddDate(1, 0, 0)) {
+	if date.After(today.AddDate(1, 0, 0)) {
 		return fmt.Errorf("date %q is far in the future", e.Date)
 	}
 
