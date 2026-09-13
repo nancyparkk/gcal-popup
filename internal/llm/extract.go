@@ -14,10 +14,9 @@ import (
 // structured result of parsing freeform text
 type ExtractedEvent struct {
 	Title              string `json:"title"`
-	Date               string `json:"date"`              // YYYY-MM-DD
-	StartTime          string `json:"start_time"`         // HH:MM (24hr)
+	Date               string `json:"date"`       // YYYY-MM-DD
+	StartTime          string `json:"start_time"` // HH:MM (24hr)
 	DurationMinutes    int    `json:"duration_minutes"`
-	Confidence         string `json:"confidence"`         // high | medium | low
 	NeedsClarification bool   `json:"needs_clarification"`
 	ClarifyingQuestion string `json:"clarifying_question"`
 }
@@ -98,7 +97,6 @@ Respond with ONLY valid JSON, no markdown formatting, matching this exact shape:
   "date": "YYYY-MM-DD",
   "start_time": "HH:MM",
   "duration_minutes": 30,
-  "confidence": "high" | "medium" | "low",
   "needs_clarification": true | false,
   "clarifying_question": "string"
 }`, now.Format("2006-01-02 (Monday)"))
