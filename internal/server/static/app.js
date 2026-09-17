@@ -1,3 +1,5 @@
+const RETRIABLE = [502, 503, 504];
+
 const screens = {
   input: document.getElementById("screen-input"),
   clarify: document.getElementById("screen-clarify"),
