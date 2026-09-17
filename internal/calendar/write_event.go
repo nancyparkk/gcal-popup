@@ -16,13 +16,21 @@ type EventInput struct {
 	DurationMinutes int
 }
 
+// eventTimes resolves the input into a concrete start and end in the local zone.
+func eventTimes(input EventInput) (start, end time.Time, err error) {
+	start, err = time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("invalid date/time: %w", err)
+	}
+	return start, start.Add(time.Duration(input.DurationMinutes) * time.Minute), nil
+}
+
 // creates an event on the user's primary gcal
 func WriteEvent(ctx context.Context, srv *googlecal.Service, input EventInput) (string, error) {
-	start, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
+	start, end, err := eventTimes(input)
 	if err != nil {
-		return "", fmt.Errorf("invalid date/time: %w", err)
+		return "", err
 	}
-	end := start.Add(time.Duration(input.DurationMinutes) * time.Minute)
 
 	event := &googlecal.Event{
 		Summary: input.Title,
