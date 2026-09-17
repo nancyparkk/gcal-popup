@@ -1,40 +1,49 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
-	"time"
+	"os/exec"
 
-	"github.com/nancyparkk/gcal-popup/internal/calendar"
-	googlecal "google.golang.org/api/calendar/v3"
+	"github.com/getlantern/systray"
+	"github.com/joho/godotenv"
+	"github.com/nancyparkk/gcal-popup/internal/server"
 )
 
+const addr = "localhost:3000"
+
 func main() {
-	ctx := context.Background()
-
-	srv, err := calendar.NewService(ctx)
-	if err != nil {
-		log.Fatalf("Unable to create calendar service: %v", err)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, relying on existing environment variables")
 	}
 
-	start := time.Now().Add(1 * time.Hour)
-	end := start.Add(30 * time.Minute)
+	go func() {
+		if err := server.Start(addr); err != nil {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
 
-	event := &googlecal.Event{
-		Summary: "gcal-popup test event",
-		Start: &googlecal.EventDateTime{
-			DateTime: start.Format(time.RFC3339),
-		},
-		End: &googlecal.EventDateTime{
-			DateTime: end.Format(time.RFC3339),
-		},
-	}
+	systray.Run(onReady, func() {})
+}
 
-	created, err := srv.Events.Insert("primary", event).Do()
-	if err != nil {
-		log.Fatalf("Unable to create event: %v", err)
-	}
+func onReady() {
+	systray.SetTitle("📅")
+	systray.SetTooltip("gcal-popup")
 
-	fmt.Printf("Event created: %s\n", created.HtmlLink)
+	newEvent := systray.AddMenuItem("New event...", "Capture a new calendar event")
+	systray.AddSeparator()
+	quit := systray.AddMenuItem("Quit", "Quit gcal-popup")
+
+	go func() {
+		for {
+			select {
+			case <-newEvent.ClickedCh:
+				if err := exec.Command("open", "http://"+addr).Start(); err != nil {
+					log.Printf("Unable to open browser: %v", err)
+				}
+			case <-quit.ClickedCh:
+				systray.Quit()
+				return
+			}
+		}
+	}()
 }
