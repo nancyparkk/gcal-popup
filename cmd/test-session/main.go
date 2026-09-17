@@ -32,8 +32,6 @@ func main() {
 	initialText, _ := reader.ReadString('\n')
 	initialText = strings.TrimSpace(initialText)
 
-	sess := session.New(extractor, initialText)
-
 	askUser := func(question string) (string, error) {
 		fmt.Printf("\n%s\n> ", question)
 		answer, err := reader.ReadString('\n')
@@ -43,7 +41,7 @@ func main() {
 		return strings.TrimSpace(answer), nil
 	}
 
-	event, err := sess.Run(ctx, askUser)
+	event, err := session.Run(ctx, extractor, initialText, askUser)
 	if err != nil {
 		log.Fatalf("Session failed: %v", err)
 	}
