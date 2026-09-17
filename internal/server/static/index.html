@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gcal-popup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="card">
+  <div id="error" class="error" hidden></div>
+
+  <section id="screen-input">
+    <h1>What's the event?</h1>
+    <form id="form-input">
+      <input id="input-text" type="text" autocomplete="off" placeholder="lunch with sarah thursday around 1ish" required>
+      <button type="submit" class="primary">Continue</button>
+    </form>
+  </section>
+
+  <section id="screen-clarify" hidden>
+    <h1>One quick question</h1>
+    <p id="clarify-question" class="question"></p>
+    <form id="form-clarify">
+      <input id="input-answer" type="text" autocomplete="off" required>
+      <button type="submit" class="primary">Answer</button>
+    </form>
+  </section>
+
+  <section id="screen-summary" hidden>
+    <h1>Does this look right?</h1>
+    <dl class="summary">
+      <div><dt>Title</dt><dd id="summary-title"></dd></div>
+      <div><dt>Date</dt><dd id="summary-date"></dd></div>
+      <div><dt>Time</dt><dd id="summary-time"></dd></div>
+      <div><dt>Duration</dt><dd id="summary-duration"></dd></div>
+    </dl>
+    <div class="actions">
+      <button id="btn-cancel" type="button" class="ghost">Cancel</button>
+      <button id="btn-create" type="button" class="primary">Create</button>
+    </div>
+  </section>
+
+  <section id="screen-success" hidden>
+    <div class="check">&#10003;</div>
+    <h1>Event created</h1>
+    <a id="success-link" class="link" href="#" target="_blank" rel="noreferrer">Open in Google Calendar</a>
+    <button id="btn-another" type="button" class="ghost">Add another</button>
+  </section>
+
+  <section id="screen-loading" hidden>
+    <div class="spinner"></div>
+    <p id="loading-label" class="muted">Thinking...</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
